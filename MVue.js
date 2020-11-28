@@ -1,3 +1,30 @@
+const compileUtil = {
+    getValue(expr,vm){
+        return expr.split('.').reduce((data,currentValue)=> {
+            console.log(currentValue)
+            return data[currentValue]
+        },vm.$data)
+    },
+    text(node,expr,vm) {
+        const value = this.getValue(expr,vm)
+        this.updater.textUpdater(node,value)
+    },
+    html(node,expr,vm) {
+        const value = this.getValue(expr,vm)
+        this.updater.htmlUpdater(node,value)
+    },
+    model(node,expr,vm) {},
+    on(node,expr,vm,eventName){},
+    //更新的函数
+    updater:{
+        htmlUpdater(node,value){
+            node.innerHtml = value
+        },
+        textUpdater(node,value){
+            node.textContent = value
+        }
+    }
+}
 class Compile{
     constructor(el, vm){
         this.el = this.isElementNode(el)? el : document.querySelector(el)
@@ -48,19 +75,21 @@ class Compile{
     }
     compileElement(node) {
         const attributes = node.attributes
-        console.log(attributes,666666666666666666666)
-        // [...attributes].forEach(element => {
-            
-        // });
-        // attributes.forEach(attr=> {
-        //     console.log(attr)
-        // })
-        // attributes.forEach((attr)=>{
-        //     console.log(attr)
-        // })
-        // attributes.forEach((arrayValue,arrayIndex) => {
-        //     console.log(arrayValue)
-        // })
+        // console.log(attributes,666666666666666666666)
+        // 第二次提交
+        if(attributes.length>0){
+            [...attributes].forEach((arrayValue)=>{
+                // console.log(arrayValue, 22222222222222)
+                const{name, value} = arrayValue
+                console.log(name)
+                if(this.isDirective(name)) {
+                  const [,directive] = name.split('-')
+                  const[dirName, eventName] = directive.split(':')
+                  console.log(dirName, eventName)
+                  compileUtil[dirName](node,value,this.vm,eventName)
+                }
+            }) 
+        }
     }
     compileText(node) {}
     node2Fragment(el) {
@@ -74,6 +103,9 @@ class Compile{
     }
     isElementNode(node){
         return node.nodeType ===1
+    }
+    isDirective(attrName) {
+        return attrName.startsWith('v-')
     }
 }
 class MVue{
